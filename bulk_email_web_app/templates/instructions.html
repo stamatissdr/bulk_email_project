@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Get an App Password</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">How to Get an App Password for Gmail</h1>
+        <ol>
+            <li>Go to your Google Account.</li>
+            <li>Select Security.</li>
+            <li>Under "Signing in to Google," select 2-Step Verification.</li>
+            <li>At the bottom of the page, select App passwords.</li>
+            <li>Enter a name for the app password (e.g., "Bulk Email Sender").</li>
+            <li>Select Generate.</li>
+            <li>Follow the instructions to enter the app password (the 16 character code in the yellow bar) on your device.</li>
+            <li>Select Done.</li>
+        </ol>
+        <p>Once you've generated the app password, you can use it in the Bulk Email Sender application.</p>
+        <a href="/" class="btn btn-primary">Back to Email Sender</a>
+    </div>
+</body>
+</html>
