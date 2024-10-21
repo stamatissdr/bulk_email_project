@@ -26,3 +26,4 @@ Traceback (most recent call last):
     self._sslobj.do_handshake()
     ~~~~~~~~~~~~~~~~~~~~~~~~~^^
 ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1020)
+2024-10-19 15:23:26,979:ERROR:SMTP connection error: (250, b'2.0.0 OK  1729340606 5b1f17b1804b1-431606c5a09sm53076015e9.35 - gsmtp')

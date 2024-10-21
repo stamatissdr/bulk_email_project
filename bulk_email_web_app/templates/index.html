@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bulk Email Sender</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"> 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -16,13 +16,8 @@
                 <input type="file" class="form-control-file" id="csv_file" name="csv_file" required>
             </div>
             <div class="form-group">
-                <label for="sender_email">Sender Email:</label>
-                <input type="email" class="form-control" id="sender_email" name="sender_email" required>
-            </div>
-            <div class="form-group">
-                <label for="app_password">App Password:</label>
-                <input type="password" class="form-control" id="app_password" name="app_password" required>
-                <small class="form-text text-muted">Don't know how to get an app password? <a href="/instructions">Click here for instructions</a></small>
+                <label for="email_subject">Email Subject:</label>
+                <input type="text" class="form-control" id="email_subject" name="email_subject" required>
             </div>
             <div class="form-group">
                 <label for="email_content">Email Content:</label>
@@ -39,6 +34,7 @@
             $('#emailForm').on('submit', function(e) {
                 e.preventDefault();
                 var formData = new FormData(this);
+                $('#result').html('<div class="alert alert-info">Sending emails, please wait...</div>');
                 $.ajax({
                     url: '/send_emails',
                     type: 'POST',
@@ -47,9 +43,21 @@
                     processData: false,
                     success: function(response) {
                         $('#result').html('<div class="alert alert-' + (response.success ? 'success' : 'danger') + '">' + response.message + '</div>');
+                        if (response.failed_emails && response.failed_emails.length > 0) {
+                            var failedList = '<ul>';
+                            response.failed_emails.forEach(function(item) {
+                                failedList += '<li>' + item.email + ': ' + item.error + '</li>';
+                            });
+                            failedList += '</ul>';
+                            $('#result').append('<div class="alert alert-warning">Failed to send to the following emails:' + failedList + '</div>');
+                        }
                     },
-                    error: function() {
-                        $('#result').html('<div class="alert alert-danger">An error occurred. Please try again.</div>');
+                    error: function(xhr) {
+                        var errorMessage = 'An error occurred. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        $('#result').html('<div class="alert alert-danger">' + errorMessage + '</div>');
                     }
                 });
             });

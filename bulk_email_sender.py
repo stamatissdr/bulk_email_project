@@ -36,27 +36,39 @@ https://docs.google.com/forms/d/e/1FAIpQLScnOum3tAaYiHaPrYaE_lCUTYNPfp93R2JhXgTM
 Με εκτίμηση
 '''
 
+def connect_to_smtp(sender_password):
+    """
+    Connects to the SMTP server and returns the server object.
+    """
+    try:
+        context = ssl.create_default_context(cafile=certifi.where())
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.ehlo()
+        server.starttls(context=context)
+        server.ehlo()
+        server.login(SENDER_EMAIL, sender_password)
+        return server
+    except Exception as e:
+        logging.error(f"SMTP connection error: {e}")
+        return None
+
 def send_email(server, recipient_email):
     """
     Sends an email to a single recipient.
     """
     try:
-        # Create the MIMEText message
         message = MIMEText(EMAIL_BODY_TEMPLATE)
         message['Subject'] = EMAIL_SUBJECT
         message['From'] = SENDER_EMAIL
         message['To'] = recipient_email
 
-        # Send the email
         server.sendmail(SENDER_EMAIL, recipient_email, message.as_string())
-
         print(f"Email successfully sent to {recipient_email}")
     except Exception as e:
         logging.error(f"Error sending email to {recipient_email}: {e}")
         print(f"Failed to send email to {recipient_email}. Error logged.")
 
 def main():
-    # Prompt for the sender's email password securely
     sender_password = getpass.getpass("Enter your email password (or app password): ")
 
     # Connect to the SQLite database
@@ -68,44 +80,28 @@ def main():
         print("Failed to connect to the database. Check the error log for details.")
         return
 
-    # Create a secure SSL context
-    context = ssl.create_default_context(cafile=certifi.where())
+    # Connect to the SMTP server
+    server = connect_to_smtp(sender_password)
+    if server is None:
+        print("Failed to connect to the SMTP server. Exiting.")
+        return
 
-    # Connect to the SMTP server with TLS encryption
     try:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.ehlo()
-            server.starttls(context=context)
-            server.ehlo()
-            server.login(SENDER_EMAIL, sender_password)
-
-            # Execute the query and iterate over the cursor directly
-            cursor.execute('SELECT email FROM email_list')
-            for i, (recipient_email,) in enumerate(cursor, 1):
-                send_email(server, recipient_email)
-                print(f"Email {i} sent to {recipient_email}")
-                
-                # Προσθήκη καθυστέρησης 3 δευτερολέπτων μεταξύ των αποστολών
-                time.sleep(3)
-                
-                # Προσθήκη παύσης 60 δευτερολέπτων μετά από κάθε 20 emails
-                if i % 20 == 0:
-                    print("Παύση για 60 δευτερόλεπτα...")
-                    time.sleep(60)
-                
-                # Δακοπή μετά από 200 emails
-                if i >= 200:
-                    print("Έχουν σταλεί 200 emails. Διακοπή της διαδικασίας.")
-                    break
-
-    except smtplib.SMTPAuthenticationError:
-        logging.error("SMTP authentication error. Check your email address and password.")
-        print("Authentication failed. Check your email address and password.")
+        cursor.execute('SELECT email FROM email_list')
+        for i, (recipient_email,) in enumerate(cursor, 1):
+            send_email(server, recipient_email)
+            print(f"Email {i} sent to {recipient_email}")
+            time.sleep(3)  # Delay between emails
+            if i % 20 == 0:
+                print("Παύση για 60 δευτερόλεπτα...")
+                time.sleep(60)
+            if i >= 200:
+                print("Έχουν σταλεί 200 emails. Διακοπή της διαδικασίας.")
+                break
     except Exception as e:
-        logging.error(f"SMTP connection error: {e}")
-        print("Failed to connect to the SMTP server. Check the error log for details.")
+        logging.error(f"Error during email sending: {e}")
     finally:
-        # Close the database connection
+        server.quit()  # Ensure the server is closed
         conn.close()
 
 if __name__ == '__main__':
